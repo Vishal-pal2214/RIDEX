@@ -20,7 +20,7 @@ const CaptainRiding = () => {
   return (
     <div className='h-screen relative flex flex-col justify-end'>
       <div className='fixed p-6 top-0 flex items-center justify-between w-screen'>
-        <img className='w-16' src='https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png' alt='' />
+        <div className='text-2xl font-black tracking-[0.3em] text-black'>RIDEX</div>
         <Link to='/captain-home' className='h-10 w-10 bg-white flex items-center justify-center rounded-full'>
           <i className='text-lg font-medium ri-home-5-line'></i>
         </Link>

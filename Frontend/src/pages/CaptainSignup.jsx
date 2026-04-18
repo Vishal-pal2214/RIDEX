@@ -54,7 +54,7 @@ const CaptainSignup = () => {
   return (
     <div className='py-5 px-5 h-screen flex flex-col justify-between'>
       <div>
-        <img className='w-20 mb-3' src='https://www.svgrepo.com/show/505031/uber-driver.svg' alt='' />
+        <div className='w-20 mb-3 text-2xl font-black tracking-[0.25em] text-black'>RIDEX</div>
         <form onSubmit={submitHandler}>
           <h3 className='text-lg w-full font-medium mb-2'>What's our Captain's name</h3>
           <div className='flex gap-4 mb-7'>
