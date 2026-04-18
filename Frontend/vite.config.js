@@ -13,6 +13,12 @@ export default defineConfig({
         target: 'http://localhost:3000',
         changeOrigin: true,
         ws: true,
+        rewriteWsUpgradeHeader: true,
+        onError: (err, req, res) => {
+          console.error('[Vite Proxy Error]', err.message)
+          res.writeHead(503, 'Service Unavailable')
+          res.end('Backend server is not running on port 3000')
+        }
       },
     },
   },
