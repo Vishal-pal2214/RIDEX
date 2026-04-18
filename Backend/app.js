@@ -24,14 +24,7 @@ const clientOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
 connectToDb();
 
 app.use(cors({
-  origin(origin, callback) {
-    if (!origin || clientOrigins.includes(origin)) {
-      callback(null, true);
-      return;
-    }
-
-    callback(new Error('Not allowed by CORS'));
-  },
+  origin: true, // Allow all origins for development
   credentials: true,
 }));
 
