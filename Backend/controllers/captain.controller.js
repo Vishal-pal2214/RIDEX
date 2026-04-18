@@ -3,79 +3,76 @@ const captainService = require('../services/captain.service');
 const blacklistTokenModel = require('../models/blacklistToken.model');
 const { validationResult } = require('express-validator');
 
+module.exports.registerCaptain = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-module.exports.registerCaptain = async (req, res, next) => {
+  const { fullname, email, password, vehicle } = req.body;
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+  const isCaptainAlreadyExist = await captainModel.findOne({ email });
 
-    const { fullname, email, password, vehicle } = req.body;
+  if (isCaptainAlreadyExist) {
+    return res.status(400).json({ message: 'Captain already exist' });
+  }
 
-    const isCaptainAlreadyExist = await captainModel.findOne({ email });
+  const hashedPassword = await captainModel.hashPassword(password);
 
-    if (isCaptainAlreadyExist) {
-        return res.status(400).json({ message: 'Captain already exist' });
-    }
+  const captain = await captainService.createCaptain({
+    firstname: fullname.firstname,
+    lastname: fullname.lastname,
+    email,
+    password: hashedPassword,
+    color: vehicle.color,
+    plate: vehicle.plate,
+    capacity: vehicle.capacity,
+    vehicleType: vehicle.vehicleType,
+  });
 
+  const token = captain.generateAuthToken();
 
-    const hashedPassword = await captainModel.hashPassword(password);
+  return res.status(201).json({ token, captain });
+};
 
-    const captain = await captainService.createCaptain({
-        firstname: fullname.firstname,
-        lastname: fullname.lastname,
-        email,
-        password: hashedPassword,
-        color: vehicle.color,
-        plate: vehicle.plate,
-        capacity: vehicle.capacity,
-        vehicleType: vehicle.vehicleType
-    });
+module.exports.loginCaptain = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-    const token = captain.generateAuthToken();
+  const { email, password } = req.body;
 
-    res.status(201).json({ token, captain });
+  const captain = await captainModel.findOne({ email }).select('+password');
 
-}
+  if (!captain) {
+    return res.status(401).json({ message: 'Invalid email or password' });
+  }
 
-module.exports.loginCaptain = async (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
+  const isMatch = await captain.comparePassword(password);
 
-    const { email, password } = req.body;
+  if (!isMatch) {
+    return res.status(401).json({ message: 'Invalid email or password' });
+  }
 
-    const captain = await captainModel.findOne({ email }).select('+password');
+  const token = captain.generateAuthToken();
 
-    if (!captain) {
-        return res.status(401).json({ message: 'Invalid email or password' });
-    }
+  res.cookie('token', token, { httpOnly: true });
 
-    const isMatch = await captain.comparePassword(password);
+  return res.status(200).json({ token, captain });
+};
 
-    if (!isMatch) {
-        return res.status(401).json({ message: 'Invalid email or password' });
-    }
+module.exports.getCaptainProfile = async (req, res) => {
+  res.status(200).json({ captain: req.captain });
+};
 
-    const token = captain.generateAuthToken();
+module.exports.logoutCaptain = async (req, res) => {
+  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
 
-    res.cookie('token', token);
+  if (token) {
+    await blacklistTokenModel.create({ token });
+  }
 
-    res.status(200).json({ token, captain });
-}
-
-module.exports.getCaptainProfile = async (req, res, next) => {
-    res.status(200).json({ captain: req.captain });
-}
-
-module.exports.logoutCaptain = async (req, res, next) => {
-    const token = req.cookies.token || req.headers.authorization?.split(' ')[ 1 ];
-
-    await blackListTokenModel.create({ token });
-
-    res.clearCookie('token');
-
-    res.status(200).json({ message: 'Logout successfully' });
-}
+  res.clearCookie('token');
+  res.status(200).json({ message: 'Logout successfully' });
+};

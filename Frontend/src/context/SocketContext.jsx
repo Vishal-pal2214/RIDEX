@@ -1,30 +1,38 @@
-import React, { createContext, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import React, { createContext, useEffect } from 'react'
+import { io } from 'socket.io-client'
+import { SOCKET_URL } from '../config/api'
 
-export const SocketContext = createContext();
+export const SocketContext = createContext()
 
-const socket = io(`${import.meta.env.VITE_BASE_URL}`); // Replace with your server URL
+const socket = io(SOCKET_URL, {
+  autoConnect: true,
+  withCredentials: true,
+})
 
 const SocketProvider = ({ children }) => {
-    useEffect(() => {
-        // Basic connection logic
-        socket.on('connect', () => {
-            console.log('Connected to server');
-        });
+  useEffect(() => {
+    const handleConnect = () => {
+      console.log('Connected to server')
+    }
 
-        socket.on('disconnect', () => {
-            console.log('Disconnected from server');
-        });
+    const handleDisconnect = () => {
+      console.log('Disconnected from server')
+    }
 
-    }, []);
+    socket.on('connect', handleConnect)
+    socket.on('disconnect', handleDisconnect)
 
+    return () => {
+      socket.off('connect', handleConnect)
+      socket.off('disconnect', handleDisconnect)
+    }
+  }, [])
 
+  return (
+    <SocketContext.Provider value={{ socket }}>
+      {children}
+    </SocketContext.Provider>
+  )
+}
 
-    return (
-        <SocketContext.Provider value={{ socket }}>
-            {children}
-        </SocketContext.Provider>
-    );
-};
-
-export default SocketProvider;
+export default SocketProvider

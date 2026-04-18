@@ -1,26 +1,24 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from '../config/api'
 
-export const UserLogout = () => {
+const UserLogout = () => {
+  const token = localStorage.getItem('token')
+  const navigate = useNavigate()
 
-    const token = localStorage.getItem('token')
-    const navigate = useNavigate()
-
-    axios.get(`${import.meta.env.VITE_API_URL}/users/logout`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    }).then((response) => {
-        if (response.status === 200) {
-            localStorage.removeItem('token')
-            navigate('/login')
-        }
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/users/logout`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }).finally(() => {
+      localStorage.removeItem('token')
+      navigate('/login')
     })
+  }, [ navigate, token ])
 
-    return (
-        <div>UserLogout</div>
-    )
+  return <div className='p-6'>Signing out...</div>
 }
 
 export default UserLogout
